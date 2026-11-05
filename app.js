@@ -2,6 +2,7 @@
 const KEY = 'flashcards.sets';
 const THEME_KEY = 'flashcards.theme';
 const DEMO_KEY = 'flashcards.demoAdded';
+const DEMO_VERSION = '2';
 const MAX_DROP_BYTES = 2 * 1024 * 1024;
 const UNREADABLE_FILE = /\.(pdf|docx?|pptx?|xlsx?|pages|key|numbers|png|jpe?g|gif|heic|webp|zip)$/i;
 
@@ -14,6 +15,11 @@ const DEMO_SET = {
     ['What uses DFS?', 'Backtracking'],
     ['What uses BFS?', 'Branch and Bound'],
     ['What prunes when a partial solution becomes invalid?', 'Backtracking'],
+    ['What prunes when a node is invalid or cant beat the best solution?', 'Branch and Bound'],
+    ['What uses low memory but may explore more of the tree', 'Backtracking'],
+    ['What is faster with good bounds but uses more memory?', 'Branch and Bound'],
+    ['Are both time complexities for branch and bound & backtracking worst case exponential? T or F', 'True'],
+    ['Back Tracking Space is O(n) T or F', 'True'],
   ],
 };
 const app = document.getElementById('app');
@@ -49,20 +55,28 @@ function showWarning(text = "Your changes can't be saved in this browser. Check 
   warning.hidden = false;
 }
 
-// Adds the demo once per browser, so deleting it sticks and existing sets are left alone.
+// Adds the demo once per browser, so deleting it sticks. A set with the same title keeps its cards and gains any it's missing.
 function seedDemo() {
+  let previous;
   try {
-    if (localStorage.getItem(DEMO_KEY)) return;
-    localStorage.setItem(DEMO_KEY, '1');
+    previous = localStorage.getItem(DEMO_KEY);
+    if (previous === DEMO_VERSION) return;
+    localStorage.setItem(DEMO_KEY, DEMO_VERSION);
   } catch {
     return;
   }
-  if (sets.some(set => set.title.trim().toLowerCase() === DEMO_SET.title.toLowerCase())) return;
-  sets.unshift({
-    id: makeId(),
-    title: DEMO_SET.title,
-    cards: DEMO_SET.cards.map(([term, definition]) => ({ id: makeId(), term, definition })),
-  });
+  const toCard = ([term, definition]) => ({ id: makeId(), term, definition });
+  const existing = sets.find(set => set.title.trim().toLowerCase() === DEMO_SET.title.toLowerCase());
+  if (existing) {
+    // Ignores a trailing "T or F" and punctuation, so an edited card doesn't come back as a duplicate.
+    const sameTerm = term => term.toLowerCase().replace(/\s*\bt o[rf] f\b\s*$/, '').replace(/[\s?.!]+$/, '').trim();
+    const terms = new Set(existing.cards.map(card => sameTerm(card.term)));
+    existing.cards.push(...DEMO_SET.cards.filter(([term]) => !terms.has(sameTerm(term))).map(toCard));
+  } else if (!previous) {
+    sets.unshift({ id: makeId(), title: DEMO_SET.title, cards: DEMO_SET.cards.map(toCard) });
+  } else {
+    return;
+  }
   save();
 }
 

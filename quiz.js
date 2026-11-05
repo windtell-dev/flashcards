@@ -1,6 +1,8 @@
 // Builds multiple-choice questions from a set's cards.
 const Quiz = (() => {
   const MAX_OPTIONS = 4;
+  const TRUE_FALSE = /^(?:t|true|f|false)$/i;
+  const isTrueFalse = card => TRUE_FALSE.test(card.definition.trim());
   // Ignores case and spaces, so "Back Tracking" and "backtracking" count as the same answer.
   const normalize = text => text.replace(/\s+/g, '').toLowerCase();
 
@@ -20,7 +22,7 @@ const Quiz = (() => {
     const answers = [];
     for (const other of cards) {
       const key = normalize(other.definition);
-      if (seen.has(key) || normalize(other.term) === normalize(card.term)) continue;
+      if (seen.has(key) || isTrueFalse(other) || normalize(other.term) === normalize(card.term)) continue;
       seen.add(key);
       answers.push(other.definition.trim());
     }
@@ -30,14 +32,20 @@ const Quiz = (() => {
   function build(cards, random = Math.random) {
     const usable = cards.filter(card => card.term.trim() && card.definition.trim());
     const questions = [];
+    const trueFalseQuestions = [];
     for (const card of shuffle(usable, random)) {
+      if (isTrueFalse(card)) {
+        const answer = /^t/i.test(card.definition.trim()) ? 'True' : 'False';
+        trueFalseQuestions.push({ term: card.term.trim(), answer, options: ['True', 'False'], correct: answer === 'True' ? 0 : 1 });
+        continue;
+      }
       const wrong = shuffle(wrongAnswers(card, usable), random).slice(0, MAX_OPTIONS - 1);
       if (!wrong.length) continue;
       const answer = card.definition.trim();
       const options = shuffle([answer, ...wrong], random);
       questions.push({ term: card.term.trim(), answer, options, correct: options.indexOf(answer) });
     }
-    return questions;
+    return [...questions, ...trueFalseQuestions];
   }
 
   return { build };

@@ -12,7 +12,7 @@ Open `index.html` in a browser, or host the folder on GitHub Pages.
 
 **To study a set:** click its square.
 
-**To quiz yourself:** open a set and choose Quiz at the top, then pick an answer with a click or the number keys. A set needs at least two different answers. Identical answers only appear once.
+**To quiz yourself:** open a set and choose Quiz at the top, then pick an answer with a click or the number keys. A set needs at least two different answers. Identical answers only appear once. A card whose answer is just T, F, True, or False, in any capitalization, becomes a True or False question, and those come together at the end.
 
 **To add a set:** choose the plus square, then **Create manually** or **Add from text**. You can also drag a text file (`.txt`, `.md`, `.csv`, `.tsv`) or selected text onto the home page. Text is turned into cards using these layouts:
 
